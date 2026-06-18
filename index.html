@@ -1,38 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-12HG5ZRG9K"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
 
-  gtag('config', 'G-12HG5ZRG9K');
-</script>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PixelVault</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        :root { --red: #ff003c; --blue: #00f0ff; }
-        body { font-family: 'Inter', sans-serif; background-color: #050505; color: #ffffff; }
-        .cyber-card { background: #111; border: 1px solid #222; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .btn-red { background: var(--red); transition: transform 0.1s; }
-        .btn-blue { background: var(--blue); color: black; transition: transform 0.1s; }
-        button:active { transform: scale(0.96); }
-        
+
+        :root {
+            --red: #ff003c;
+            --blue: #00f0ff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #ffffff;
+        }
+
+        .cyber-card {
+            background: #111;
+            border: 1px solid #222;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-red {
+            background: var(--red);
+            transition: transform 0.1s;
+        }
+
+        .btn-blue {
+            background: var(--blue);
+            color: black;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
         /* MOBILE FIX - Force visibility for all text */
         @media (max-width: 768px) {
+
             /* File input text */
             input[type="file"] {
                 color: #ffffff !important;
                 background-color: #000000 !important;
                 border: 1px solid #333;
             }
-            
+
             /* File input placeholder text */
             input[type="file"]::file-selector-button {
                 color: #ffffff;
@@ -44,9 +64,20 @@
                 margin-right: 10px;
                 cursor: pointer;
             }
-            
+
+            /* Password input */
+            input[type="password"] {
+                color: #ffffff !important;
+                background-color: #000000 !important;
+                border: 1px solid #333 !important;
+            }
+
+            input[type="password"]::placeholder {
+                color: #6b7280;
+            }
+
             /* Status messages */
-            .upload-status, 
+            .upload-status,
             .file-status,
             #img-status,
             #file-status {
@@ -60,42 +91,53 @@
                 border-left: 3px solid #111111;
                 display: block !important;
             }
-            
+
             /* The dashed border area in decode panel */
             .border-dashed {
                 border-color: #111111 !important;
                 background-color: #111;
             }
-            
+
             /* All text inside decode panel */
             #decode-panel * {
                 color: #ffffff;
             }
-            
+
             /* Force all text to be visible */
-            body, p, label, div, span, h1, h2, h3, button {
+            body,
+            p,
+            label,
+            div,
+            span,
+            h1,
+            h2,
+            h3,
+            button {
                 color: #ffffff;
             }
-            
+
             /* Exception for gray text that's supposed to be dim */
-            .text-gray-400, 
+            .text-gray-400,
             .text-gray-500 {
                 color: #9ca3af !important;
             }
-            
+
             /* Make sure cyber card has dark background */
             .cyber-card {
                 background: #111 !important;
                 border: 1px solid #333;
             }
-            
+
             /* Fix for any white text on light background */
-            .bg-black, .bg-gray-900, [class*="bg-"] {
+            .bg-black,
+            .bg-gray-900,
+            [class*="bg-"] {
                 color: #ffffff;
             }
         }
     </style>
 </head>
+
 <body class="min-h-screen flex flex-col items-center justify-center p-6">
 
     <header class="mb-10 text-center">
@@ -106,24 +148,47 @@
     </header>
 
     <main class="w-full max-w-md cyber-card p-8 rounded-2xl">
-        
-        <div class="flex bg-black p-1 rounded-xl mb-8">
-            <button onclick="switchTab('encode')" id="tab-encode" class="flex-1 py-2 text-sm font-bold rounded-lg bg-[#ff003c] text-white">HIDE</button>
-            <button onclick="switchTab('decode')" id="tab-decode" class="flex-1 py-2 text-sm font-bold rounded-lg text-gray-400">REVEAL</button>
+
+        <div class="flex bg-black p-1 rounded-xl mb-6">
+            <button onclick="switchTab('encode')" id="tab-encode"
+                class="flex-1 py-2 text-sm font-bold rounded-lg bg-[#ff003c] text-white">HIDE</button>
+            <button onclick="switchTab('decode')" id="tab-decode"
+                class="flex-1 py-2 text-sm font-bold rounded-lg text-gray-400">REVEAL</button>
+        </div>
+
+        <div class="flex items-center justify-between mb-6 px-1">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">🔐 Encryption</span>
+            <label class="relative inline-block w-12 h-6 cursor-pointer select-none">
+                <input type="checkbox" id="enc-toggle" class="sr-only peer" checked>
+                <span
+                    class="absolute inset-0 bg-gray-700 peer-checked:bg-[#ff003c] rounded-full transition-colors duration-200"></span>
+                <span
+                    class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 peer-checked:translate-x-6"></span>
+            </label>
         </div>
 
         <div id="encode-panel" class="space-y-6">
             <div>
                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">1. Pick a Photo</label>
-                <input type="file" id="img-input" accept="image/*" class="w-full bg-black border border-gray-800 p-3 rounded-lg text-xs file:hidden cursor-pointer hover:border-gray-600">
+                <input type="file" id="img-input" accept="image/*"
+                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-xs file:hidden cursor-pointer hover:border-gray-600">
                 <div id="img-status" class="upload-status text-xs text-[#00f0ff] mt-2 font-mono hidden"></div>
             </div>
             <div>
                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">2. File to Hide</label>
-                <input type="file" id="file-input" class="w-full bg-black border border-gray-800 p-3 rounded-lg text-xs file:hidden cursor-pointer hover:border-gray-600">
+                <input type="file" id="file-input"
+                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-xs file:hidden cursor-pointer hover:border-gray-600">
                 <div id="file-status" class="upload-status text-xs text-[#00f0ff] mt-2 font-mono hidden"></div>
             </div>
-            <button onclick="handleEncode()" id="encode-btn" class="btn-red w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider">Download Hidden Image</button>
+            <div id="encode-pass-wrap">
+                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">3. Password</label>
+                <input type="password" id="encode-pass" placeholder="••••••••"
+                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-sm cursor-pointer hover:border-gray-600">
+                <p class="text-[10px] text-gray-500 mt-2 font-mono">⚠️ Lost password = unrecoverable data</p>
+            </div>
+            <button onclick="handleEncode()" id="encode-btn"
+                class="btn-red w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider">Download Hidden
+                Image</button>
         </div>
 
         <div id="decode-panel" class="hidden space-y-6">
@@ -134,18 +199,66 @@
                 </div>
                 <div id="decode-status" class="upload-status text-xs text-[#00f0ff] mt-2 font-mono hidden"></div>
             </div>
-            <button onclick="handleDecode()" id="decode-btn" class="btn-blue w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider">Extract Hidden File</button>
+            <div id="decode-pass-wrap">
+                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Password</label>
+                <input type="password" id="decode-pass" placeholder="••••••••"
+                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-sm cursor-pointer hover:border-gray-600">
+            </div>
+            <button onclick="handleDecode()" id="decode-btn"
+                class="btn-blue w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider">Extract Hidden
+                File</button>
         </div>
 
     </main>
 
     <script>
         const MARKER = "---PV-VAULT---";
+        const MAGIC = new Uint8Array([0x50, 0x56, 0x4C, 0x54]); // "PVLT"
+        const PBKDF2_ITERATIONS = 150000;
+
+        // Encryption toggle: show/hide password fields in both panels
+        const encToggle = document.getElementById('enc-toggle');
+        function syncPassVisibility() {
+            const on = encToggle.checked;
+            document.getElementById('encode-pass-wrap').classList.toggle('hidden', !on);
+            document.getElementById('decode-pass-wrap').classList.toggle('hidden', !on);
+        }
+        encToggle.addEventListener('change', syncPassVisibility);
+        syncPassVisibility();
+
+        // Derive an AES-GCM 256-bit key from password + salt via PBKDF2
+        async function deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const baseKey = await crypto.subtle.importKey(
+                'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+                baseKey,
+                { name: 'AES-GCM', length: 256 },
+                false, ['encrypt', 'decrypt']);
+        }
+
+        // Detect encrypted format: file ends with 8-byte footer [offset u32 LE][magic 4B]
+        function isEncrypted(u8) {
+            if (u8.length < 8) return false;
+            const tail = u8.length - 4;
+            return u8[tail] === MAGIC[0] && u8[tail + 1] === MAGIC[1]
+                && u8[tail + 2] === MAGIC[2] && u8[tail + 3] === MAGIC[3];
+        }
+
+        function downloadBlob(bytes, filename, mime) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([bytes], mime ? { type: mime } : {}));
+            a.download = filename;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }
+
 
         // File name display for mobile
-        document.getElementById('img-input').addEventListener('change', function(e) {
+        document.getElementById('img-input').addEventListener('change', function (e) {
             const statusDiv = document.getElementById('img-status');
-            if(e.target.files[0]) {
+            if (e.target.files[0]) {
                 statusDiv.innerHTML = '✅ <span class="text-white">' + e.target.files[0].name + '</span>';
                 statusDiv.classList.remove('hidden');
             } else {
@@ -153,9 +266,9 @@
             }
         });
 
-        document.getElementById('file-input').addEventListener('change', function(e) {
+        document.getElementById('file-input').addEventListener('change', function (e) {
             const statusDiv = document.getElementById('file-status');
-            if(e.target.files[0]) {
+            if (e.target.files[0]) {
                 statusDiv.innerHTML = '📦 <span class="text-white">' + e.target.files[0].name + '</span>';
                 statusDiv.classList.remove('hidden');
             } else {
@@ -163,9 +276,9 @@
             }
         });
 
-        document.getElementById('decode-input').addEventListener('change', function(e) {
+        document.getElementById('decode-input').addEventListener('change', function (e) {
             const statusDiv = document.getElementById('decode-status');
-            if(e.target.files[0]) {
+            if (e.target.files[0]) {
                 statusDiv.innerHTML = '🔓 <span class="text-white">' + e.target.files[0].name + '</span>';
                 statusDiv.classList.remove('hidden');
             } else {
@@ -177,11 +290,11 @@
             const isEncode = tab === 'encode';
             document.getElementById('encode-panel').classList.toggle('hidden', !isEncode);
             document.getElementById('decode-panel').classList.toggle('hidden', isEncode);
-            
+
             const encodeBtn = document.getElementById('tab-encode');
             const decodeBtn = document.getElementById('tab-decode');
 
-            if(isEncode) {
+            if (isEncode) {
                 encodeBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg bg-[#ff003c] text-white";
                 decodeBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg text-gray-400";
             } else {
@@ -194,29 +307,71 @@
             const btn = document.getElementById('encode-btn');
             const imgFile = document.getElementById('img-input').files[0];
             const secretFile = document.getElementById('file-input').files[0];
-            
+            const useEncryption = encToggle.checked;
+            const password = document.getElementById('encode-pass').value;
+
             if (!imgFile || !secretFile) {
                 alert("Please select both files.");
                 return;
             }
+            if (useEncryption && !password) {
+                alert("Please enter a password (or turn off encryption).");
+                return;
+            }
 
             btn.innerText = "PROCESSING...";
-            
-            const imgBuffer = await imgFile.arrayBuffer();
-            const secretBuffer = await secretFile.arrayBuffer();
-            const meta = new TextEncoder().encode(MARKER + secretFile.name + MARKER);
-            
-            const combined = new Uint8Array(imgBuffer.byteLength + meta.byteLength + secretBuffer.byteLength);
-            combined.set(new Uint8Array(imgBuffer), 0);
-            combined.set(meta, imgBuffer.byteLength);
-            combined.set(new Uint8Array(secretBuffer), imgBuffer.byteLength + meta.byteLength);
 
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([combined], { type: imgFile.type }));
-            a.download = `hidden_${imgFile.name}`;
-            a.click();
-            
-            btn.innerText = "DONE!";
+            try {
+                const imgBuffer = await imgFile.arrayBuffer();
+                const secretBuffer = await secretFile.arrayBuffer();
+                const imgBytes = new Uint8Array(imgBuffer);
+
+                let combined;
+                if (useEncryption) {
+                    // Plaintext = [filenameLen u16 LE][filename UTF8][secret bytes]
+                    const nameBytes = new TextEncoder().encode(secretFile.name);
+                    const plaintext = new Uint8Array(2 + nameBytes.length + secretBuffer.byteLength);
+                    plaintext[0] = nameBytes.length & 0xff;
+                    plaintext[1] = (nameBytes.length >> 8) & 0xff;
+                    plaintext.set(nameBytes, 2);
+                    plaintext.set(new Uint8Array(secretBuffer), 2 + nameBytes.length);
+
+                    const salt = crypto.getRandomValues(new Uint8Array(16));
+                    const iv = crypto.getRandomValues(new Uint8Array(12));
+                    const key = await deriveKey(password, salt);
+                    const ciphertext = new Uint8Array(
+                        await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plaintext));
+
+                    // Layout: img | MAGIC | salt(16) | iv(12) | ciphertext | offset u32 LE | MAGIC
+                    const offset = imgBytes.length;
+                    const total = imgBytes.length + 4 + 16 + 12 + ciphertext.length + 4 + 4;
+                    combined = new Uint8Array(total);
+                    let p = 0;
+                    combined.set(imgBytes, p); p += imgBytes.length;
+                    combined.set(MAGIC, p); p += 4;
+                    combined.set(salt, p); p += 16;
+                    combined.set(iv, p); p += 12;
+                    combined.set(ciphertext, p); p += ciphertext.length;
+                    combined[p++] = offset & 0xff;
+                    combined[p++] = (offset >> 8) & 0xff;
+                    combined[p++] = (offset >> 16) & 0xff;
+                    combined[p++] = (offset >> 24) & 0xff;
+                    combined.set(MAGIC, p);
+                } else {
+                    // Legacy: img | MARKER + name + MARKER | secret
+                    const meta = new TextEncoder().encode(MARKER + secretFile.name + MARKER);
+                    combined = new Uint8Array(imgBytes.length + meta.length + secretBuffer.byteLength);
+                    combined.set(imgBytes, 0);
+                    combined.set(meta, imgBytes.length);
+                    combined.set(new Uint8Array(secretBuffer), imgBytes.length + meta.length);
+                }
+
+                downloadBlob(combined, `hidden_${imgFile.name}`, imgFile.type);
+                btn.innerText = "DONE!";
+            } catch (err) {
+                console.error(err);
+                btn.innerText = "ERROR";
+            }
             setTimeout(() => btn.innerText = "Download Hidden Image", 2000);
         }
 
@@ -229,48 +384,88 @@
             }
 
             btn.innerText = "EXTRACTING...";
-            
-            const buffer = await file.arrayBuffer();
-            const uint8 = new Uint8Array(buffer);
-            const binaryString = new TextDecoder().decode(uint8);
-            const parts = binaryString.split(MARKER);
 
-            if (parts.length < 3) {
-                btn.innerText = "ERROR: NO DATA";
-                setTimeout(() => btn.innerText = "Extract Hidden File", 2000);
-                alert("No hidden file found in this image.");
-                return;
-            }
+            try {
+                const buffer = await file.arrayBuffer();
+                const u8 = new Uint8Array(buffer);
 
-            const fileName = parts[1];
-            const markerEncoded = new TextEncoder().encode(MARKER);
-            let count = 0, secondIdx = -1;
-            for(let i=0; i<uint8.length; i++) {
-                let match = true;
-                for(let j=0; j<markerEncoded.length; j++) {
-                    if(uint8[i+j] !== markerEncoded[j]) { 
-                        match=false; 
-                        break; 
+                if (isEncrypted(u8)) {
+                    // Encrypted path — auto-unhide password field in case toggle is OFF
+                    const passWrap = document.getElementById('decode-pass-wrap');
+                    passWrap.classList.remove('hidden');
+                    const password = document.getElementById('decode-pass').value;
+                    if (!password) {
+                        btn.innerText = "PASSWORD REQUIRED";
+                        setTimeout(() => btn.innerText = "Extract Hidden File", 2000);
+                        alert("This image is encrypted. Please enter the password.");
+                        document.getElementById('decode-pass').focus();
+                        return;
                     }
-                }
-                if(match) { 
-                    count++; 
-                    if(count===2) { 
-                        secondIdx=i; 
-                        break; 
-                    }
-                }
-            }
 
-            const payload = uint8.slice(secondIdx + markerEncoded.length);
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([payload]));
-            a.download = fileName;
-            a.click();
-            
-            btn.innerText = "SUCCESS!";
+                    const len = u8.length;
+                    const offset = u8[len - 8] | (u8[len - 7] << 8) | (u8[len - 6] << 16) | ((u8[len - 5] << 24) >>> 0);
+                    const payload = u8.slice(offset, len - 8);
+                    // payload = MAGIC(4) | salt(16) | iv(12) | ciphertext
+                    const salt = payload.slice(4, 20);
+                    const iv = payload.slice(20, 32);
+                    const ciphertext = payload.slice(32);
+
+                    const key = await deriveKey(password, salt);
+                    let plaintext;
+                    try {
+                        plaintext = new Uint8Array(
+                            await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext));
+                    } catch (e) {
+                        btn.innerText = "ERROR: WRONG PASSWORD";
+                        setTimeout(() => btn.innerText = "Extract Hidden File", 2000);
+                        alert("Failed — wrong password or corrupted file.");
+                        return;
+                    }
+
+                    const nameLen = plaintext[0] | (plaintext[1] << 8);
+                    const nameBytes = plaintext.slice(2, 2 + nameLen);
+                    const fileName = new TextDecoder().decode(nameBytes);
+                    const fileBytes = plaintext.slice(2 + nameLen);
+
+                    downloadBlob(fileBytes, fileName);
+                    btn.innerText = "SUCCESS!";
+                } else {
+                    // Legacy MARKER path
+                    const binaryString = new TextDecoder().decode(u8);
+                    const parts = binaryString.split(MARKER);
+
+                    if (parts.length < 3) {
+                        btn.innerText = "ERROR: NO DATA";
+                        setTimeout(() => btn.innerText = "Extract Hidden File", 2000);
+                        alert("No hidden file found in this image.");
+                        return;
+                    }
+
+                    const fileName = parts[1];
+                    const markerEncoded = new TextEncoder().encode(MARKER);
+                    let count = 0, secondIdx = -1;
+                    for (let i = 0; i < u8.length; i++) {
+                        let match = true;
+                        for (let j = 0; j < markerEncoded.length; j++) {
+                            if (u8[i + j] !== markerEncoded[j]) { match = false; break; }
+                        }
+                        if (match) {
+                            count++;
+                            if (count === 2) { secondIdx = i; break; }
+                        }
+                    }
+
+                    const payload = u8.slice(secondIdx + markerEncoded.length);
+                    downloadBlob(payload, fileName);
+                    btn.innerText = "SUCCESS!";
+                }
+            } catch (err) {
+                console.error(err);
+                btn.innerText = "ERROR";
+            }
             setTimeout(() => btn.innerText = "Extract Hidden File", 2000);
         }
     </script>
 </body>
+
 </html>
