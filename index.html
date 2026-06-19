@@ -578,7 +578,7 @@
                     combined.set(payload, imgBytes.length + meta.length);
                 }
 
-                downloadBlob(combined, `hidden_${imgFile.name}`, imgFile.type);
+                downloadBlob(combined, `pv_${imgFile.name}`, imgFile.type);
                 btn.innerText = "DONE!";
             } catch (err) {
                 console.error(err);
@@ -640,12 +640,13 @@
                     }
 
                     // plaintext:
-                    //   starts with PK\x03\x04 -> ZIP archive -> download as extracted.zip
+                    //   starts with PK\x03\x04 -> ZIP archive -> download as <image stem>.zip
                     //   otherwise              -> [nameLen u16][name][bytes] -> restore original file
+                    const zipName = file.name.replace(/\.[^.]+$/, '') + '.zip';
                     if (plaintext.length >= 4
                         && plaintext[0] === 0x50 && plaintext[1] === 0x4B
                         && plaintext[2] === 0x03 && plaintext[3] === 0x04) {
-                        downloadBlob(plaintext, 'extracted.zip', 'application/zip');
+                        downloadBlob(plaintext, zipName, 'application/zip');
                         btn.innerText = "EXTRACTED ZIP!";
                     } else {
                         const nameLen = plaintext[0] | (plaintext[1] << 8);
@@ -680,9 +681,10 @@
                     const headerStr = new TextDecoder().decode(u8.slice(idx1 + markerBytes.length, idx2));
                     const payload = u8.slice(idx2 + markerBytes.length);
 
+                    const zipName = file.name.replace(/\.[^.]+$/, '') + '.zip';
                     if (headerStr === "ZIP") {
                         // Multi-file non-encrypted: payload is a ZIP archive
-                        downloadBlob(payload, 'extracted.zip', 'application/zip');
+                        downloadBlob(payload, zipName, 'application/zip');
                         btn.innerText = "EXTRACTED ZIP!";
                     } else {
                         // Legacy: header is the filename, payload is the single file
