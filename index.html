@@ -287,17 +287,6 @@
                 && u8[tail + 2] === MAGIC[2] && u8[tail + 3] === MAGIC[3];
         }
 
-        // Trigger downloads for one or more extracted files.
-        // Multiple files are bundled into a ZIP archive (no third-party libs, store mode).
-        async function downloadFiles(files) {
-            if (files.length > 1) {
-                const zip = makeZip(files);
-                downloadBlob(zip, 'extracted.zip', 'application/zip');
-            } else {
-                for (const f of files) downloadBlob(f.bytes, f.name);
-            }
-        }
-
         function downloadBlob(bytes, filename, mime) {
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([bytes], mime ? { type: mime } : {}));
