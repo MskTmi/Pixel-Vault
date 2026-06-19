@@ -177,7 +177,7 @@
         <h1 class="text-5xl font-black tracking-tighter uppercase italic">
             Pixel<span class="text-[#ff003c]">Vault</span>
         </h1>
-        <p class="text-gray-500 text-sm mt-2 font-medium">Hide any file inside a photo.</p>
+        <p class="text-gray-500 text-sm mt-2 font-medium">Hide one or more files inside a photo.</p>
     </header>
 
     <main class="w-full max-w-md cyber-card p-8 rounded-2xl">
@@ -214,21 +214,22 @@
                 <div id="img-status" class="upload-status text-xs text-[#00f0ff] mt-2 font-mono hidden"></div>
             </div>
             <div>
-                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">2. File to Hide</label>
+                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">2. Files to Hide</label>
                 <label
                     class="flex items-stretch w-full bg-black border border-gray-800 rounded-lg cursor-pointer hover:border-gray-600 overflow-hidden">
                     <span
                         class="flex items-center shrink-0 bg-[#ff003c] text-white font-bold text-xs uppercase tracking-wider px-4 py-3">Choose</span>
                     <span class="flex items-center flex-1 px-3 text-xs text-gray-500 truncate min-w-0" id="file-name">No
-                        file chosen</span>
-                    <input type="file" id="file-input" class="sr-only">
+                        files chosen</span>
+                    <input type="file" id="file-input" class="sr-only" multiple>
                 </label>
                 <div id="file-status" class="upload-status text-xs text-[#00f0ff] mt-2 font-mono hidden"></div>
             </div>
             <div id="encode-pass-wrap" class="max-md:!mt-3">
                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">3. Password</label>
                 <input type="password" id="encode-pass" placeholder="••••••••"
-                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-sm cursor-pointer hover:border-gray-600">
+                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-sm cursor-pointer hover:border-gray-600"
+                    onkeydown="if(event.key==='Enter') handleEncode()">
                 <p class="text-[10px] text-gray-500 mt-2 font-mono">⚠️ Lost password = unrecoverable data</p>
             </div>
             <button onclick="handleEncode()" id="encode-btn"
@@ -252,7 +253,8 @@
             <div id="decode-pass-wrap" class="max-md:!mt-3">
                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Password</label>
                 <input type="password" id="decode-pass" placeholder="••••••••"
-                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-sm cursor-pointer hover:border-gray-600">
+                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-sm cursor-pointer hover:border-gray-600"
+                    onkeydown="if(event.key==='Enter') handleDecode()">
             </div>
             <button onclick="handleDecode()" id="decode-btn"
                 class="btn-blue w-full py-4 rounded-xl font-black uppercase text-sm tracking-wider">Extract Hidden
@@ -277,7 +279,7 @@
 
     <script>
         const MARKER = "---PV-VAULT---";
-        const MAGIC = new Uint8Array([0x50, 0x56, 0x4C, 0x54]); // "PVLT"
+        const MAGIC = new Uint8Array([0x50, 0x56, 0x4C, 0x54]); // "PVLT" — encrypted (single or multi)
         const PBKDF2_ITERATIONS = 150000;
 
         // Encryption toggle: show/hide password fields in both panels
@@ -310,12 +312,125 @@
                 && u8[tail + 2] === MAGIC[2] && u8[tail + 3] === MAGIC[3];
         }
 
+        // Trigger downloads for one or more extracted files.
+        // Multiple files are bundled into a ZIP archive (no third-party libs, store mode).
+        async function downloadFiles(files) {
+            if (files.length > 1) {
+                const zip = makeZip(files);
+                downloadBlob(zip, 'extracted.zip', 'application/zip');
+            } else {
+                for (const f of files) downloadBlob(f.bytes, f.name);
+            }
+        }
+
         function downloadBlob(bytes, filename, mime) {
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([bytes], mime ? { type: mime } : {}));
             a.download = filename;
             a.click();
             setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }
+
+        // --- Minimal ZIP writer (store / no compression, UTF-8 filenames) ---
+        const CRC_TABLE = (() => {
+            const t = new Uint32Array(256);
+            for (let n = 0; n < 256; n++) {
+                let c = n;
+                for (let k = 0; k < 8; k++) {
+                    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+                }
+                t[n] = c >>> 0;
+            }
+            return t;
+        })();
+
+        function crc32(bytes) {
+            let c = 0xFFFFFFFF;
+            for (let i = 0; i < bytes.length; i++) {
+                c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+            }
+            return (c ^ 0xFFFFFFFF) >>> 0;
+        }
+
+        function makeZip(files) {
+            const enc = new TextEncoder();
+            const records = [];
+            let offset = 0;
+            let totalLen = 0;
+            for (const f of files) {
+                const nameBytes = enc.encode(f.name);
+                const crc = crc32(f.bytes);
+                const size = f.bytes.length;
+
+                // Local file header (30 bytes + name)
+                const lh = new Uint8Array(30 + nameBytes.length);
+                const dv = new DataView(lh.buffer);
+                dv.setUint32(0, 0x04034b50, true);   // signature
+                dv.setUint16(4, 20, true);            // version needed
+                dv.setUint16(6, 0x0800, true);        // flags: UTF-8 name
+                dv.setUint16(8, 0, true);             // method: store
+                dv.setUint16(10, 0, true);            // mod time
+                dv.setUint16(12, 0x0021, true);       // mod date (1980-01-01)
+                dv.setUint32(14, crc, true);
+                dv.setUint32(18, size, true);         // compressed size
+                dv.setUint32(22, size, true);         // uncompressed size
+                dv.setUint16(26, nameBytes.length, true);
+                dv.setUint16(28, 0, true);            // extra length
+                lh.set(nameBytes, 30);
+
+                // Central directory header (46 bytes + name)
+                const ch = new Uint8Array(46 + nameBytes.length);
+                const cv = new DataView(ch.buffer);
+                cv.setUint32(0, 0x02014b50, true);
+                cv.setUint16(4, 20, true);            // version made by
+                cv.setUint16(6, 20, true);            // version needed
+                cv.setUint16(8, 0x0800, true);        // flags: UTF-8
+                cv.setUint16(10, 0, true);            // method: store
+                cv.setUint16(12, 0, true);            // mod time
+                cv.setUint16(14, 0x0021, true);       // mod date
+                cv.setUint32(16, crc, true);
+                cv.setUint32(20, size, true);
+                cv.setUint32(24, size, true);
+                cv.setUint16(28, nameBytes.length, true);
+                cv.setUint16(30, 0, true);            // extra
+                cv.setUint16(32, 0, true);            // comment len
+                cv.setUint16(34, 0, true);            // disk number
+                cv.setUint16(36, 0, true);            // internal attrs
+                cv.setUint32(38, 0, true);            // external attrs
+                cv.setUint32(42, offset, true);       // local header offset
+                ch.set(nameBytes, 46);
+
+                records.push({ lh, data: f.bytes, ch });
+                totalLen += lh.length + f.bytes.length + ch.length;
+                offset += lh.length + f.bytes.length;
+            }
+
+            const centralSize = totalLen - records.reduce((a, r) => a + r.lh.length + r.data.length, 0);
+
+            // End of central directory record (22 bytes)
+            const eocd = new Uint8Array(22);
+            const ev = new DataView(eocd.buffer);
+            ev.setUint32(0, 0x06054b50, true);
+            ev.setUint16(4, 0, true);                 // disk number
+            ev.setUint16(6, 0, true);                 // disk with central dir
+            ev.setUint16(8, files.length, true);      // entries on this disk
+            ev.setUint16(10, files.length, true);     // total entries
+            ev.setUint32(12, centralSize, true);
+            ev.setUint32(16, offset, true);           // central dir offset
+            ev.setUint16(20, 0, true);                // comment length
+            totalLen += 22;
+
+            const out = new Uint8Array(totalLen);
+            let p = 0;
+            for (const r of records) {
+                out.set(r.lh, p); p += r.lh.length;
+                out.set(r.data, p); p += r.data.length;
+            }
+            for (const r of records) {
+                out.set(r.ch, p); p += r.ch.length;
+            }
+            out.set(eocd, p);
+            return out;
         }
 
 
@@ -340,14 +455,16 @@
         document.getElementById('file-input').addEventListener('change', function (e) {
             const statusDiv = document.getElementById('file-status');
             const nameSpan = document.getElementById('file-name');
-            if (e.target.files[0]) {
-                nameSpan.textContent = e.target.files[0].name;
+            const files = Array.from(e.target.files);
+            if (files.length) {
+                const names = files.map(f => f.name);
+                nameSpan.textContent = names.length === 1 ? names[0] : `${names.length} files selected`;
                 nameSpan.classList.remove('text-gray-500');
                 nameSpan.classList.add('text-white');
-                statusDiv.innerHTML = '📦 <span class="text-white">' + e.target.files[0].name + '</span>';
+                statusDiv.innerHTML = '📦 <span class="text-white">' + names.join(', ') + '</span>';
                 statusDiv.classList.remove('hidden');
             } else {
-                nameSpan.textContent = 'No file chosen';
+                nameSpan.textContent = 'No files chosen';
                 nameSpan.classList.add('text-gray-500');
                 nameSpan.classList.remove('text-white');
                 statusDiv.classList.add('hidden');
@@ -388,15 +505,17 @@
             }
         }
 
+
+
         async function handleEncode() {
             const btn = document.getElementById('encode-btn');
             const imgFile = document.getElementById('img-input').files[0];
-            const secretFile = document.getElementById('file-input').files[0];
+            const secretFiles = Array.from(document.getElementById('file-input').files);
             const useEncryption = encToggle.checked;
             const password = document.getElementById('encode-pass').value;
 
-            if (!imgFile || !secretFile) {
-                alert("Please select both files.");
+            if (!imgFile || secretFiles.length === 0) {
+                alert("Please select both a photo and at least one file to hide.");
                 return;
             }
             if (useEncryption && !password) {
@@ -408,18 +527,36 @@
 
             try {
                 const imgBuffer = await imgFile.arrayBuffer();
-                const secretBuffer = await secretFile.arrayBuffer();
                 const imgBytes = new Uint8Array(imgBuffer);
+
+                // Read all secret files into memory
+                const secrets = [];
+                for (const f of secretFiles) {
+                    const buf = await f.arrayBuffer();
+                    secrets.push({ name: f.name, bytes: new Uint8Array(buf) });
+                }
+
+                // Multi-file payload includes the original (unmodified) photo as a backup,
+                // since the carrier image gets altered during encoding.
+                const zipEntries = [{ name: imgFile.name, bytes: imgBytes }, ...secrets];
 
                 let combined;
                 if (useEncryption) {
-                    // Plaintext = [filenameLen u16 LE][filename UTF8][secret bytes]
-                    const nameBytes = new TextEncoder().encode(secretFile.name);
-                    const plaintext = new Uint8Array(2 + nameBytes.length + secretBuffer.byteLength);
-                    plaintext[0] = nameBytes.length & 0xff;
-                    plaintext[1] = (nameBytes.length >> 8) & 0xff;
-                    plaintext.set(nameBytes, 2);
-                    plaintext.set(new Uint8Array(secretBuffer), 2 + nameBytes.length);
+                    // Plaintext:
+                    //   single file -> [nameLen u16 LE][name UTF8][bytes]   (same as legacy PVLT)
+                    //   multi  file -> ZIP archive bytes (starts with PK\x03\x04)
+                    let plaintext;
+                    if (secrets.length === 1) {
+                        const s = secrets[0];
+                        const nb = new TextEncoder().encode(s.name);
+                        plaintext = new Uint8Array(2 + nb.length + s.bytes.length);
+                        plaintext[0] = nb.length & 0xff;
+                        plaintext[1] = (nb.length >> 8) & 0xff;
+                        plaintext.set(nb, 2);
+                        plaintext.set(s.bytes, 2 + nb.length);
+                    } else {
+                        plaintext = makeZip(zipEntries);
+                    }
 
                     const salt = crypto.getRandomValues(new Uint8Array(16));
                     const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -431,24 +568,39 @@
                     const offset = imgBytes.length;
                     const total = imgBytes.length + 4 + 16 + 12 + ciphertext.length + 4 + 4;
                     combined = new Uint8Array(total);
-                    let p = 0;
-                    combined.set(imgBytes, p); p += imgBytes.length;
-                    combined.set(MAGIC, p); p += 4;
-                    combined.set(salt, p); p += 16;
-                    combined.set(iv, p); p += 12;
-                    combined.set(ciphertext, p); p += ciphertext.length;
-                    combined[p++] = offset & 0xff;
-                    combined[p++] = (offset >> 8) & 0xff;
-                    combined[p++] = (offset >> 16) & 0xff;
-                    combined[p++] = (offset >> 24) & 0xff;
-                    combined.set(MAGIC, p);
+                    let q = 0;
+                    combined.set(imgBytes, q); q += imgBytes.length;
+                    combined.set(MAGIC, q); q += 4;
+                    combined.set(salt, q); q += 16;
+                    combined.set(iv, q); q += 12;
+                    combined.set(ciphertext, q); q += ciphertext.length;
+                    combined[q++] = offset & 0xff;
+                    combined[q++] = (offset >> 8) & 0xff;
+                    combined[q++] = (offset >> 16) & 0xff;
+                    combined[q++] = (offset >> 24) & 0xff;
+                    combined.set(MAGIC, q);
                 } else {
-                    // Legacy: img | MARKER + name + MARKER | secret
-                    const meta = new TextEncoder().encode(MARKER + secretFile.name + MARKER);
-                    combined = new Uint8Array(imgBytes.length + meta.length + secretBuffer.byteLength);
+                    // Non-encrypted: img | MARKER + header + MARKER | payload
+                    //   single file -> header = filename, payload = bytes (legacy compatible)
+                    //   multi  file -> header = "ZIP",      payload = zip bytes
+                    const markerBytes = new TextEncoder().encode(MARKER);
+                    let headerStr, payload;
+                    if (secrets.length === 1) {
+                        headerStr = secrets[0].name;
+                        payload = secrets[0].bytes;
+                    } else {
+                        headerStr = "ZIP";
+                        payload = makeZip(zipEntries);
+                    }
+                    const headerBytes = new TextEncoder().encode(headerStr);
+                    const meta = new Uint8Array(markerBytes.length * 2 + headerBytes.length);
+                    meta.set(markerBytes, 0);
+                    meta.set(headerBytes, markerBytes.length);
+                    meta.set(markerBytes, markerBytes.length + headerBytes.length);
+                    combined = new Uint8Array(imgBytes.length + meta.length + payload.length);
                     combined.set(imgBytes, 0);
                     combined.set(meta, imgBytes.length);
-                    combined.set(new Uint8Array(secretBuffer), imgBytes.length + meta.length);
+                    combined.set(payload, imgBytes.length + meta.length);
                 }
 
                 downloadBlob(combined, `hidden_${imgFile.name}`, imgFile.type);
@@ -473,9 +625,15 @@
             try {
                 const buffer = await file.arrayBuffer();
                 const u8 = new Uint8Array(buffer);
+                const len = u8.length;
 
                 if (isEncrypted(u8)) {
-                    // Encrypted path — auto-unhide password field in case toggle is OFF
+                    // Encrypted (PVL2) — single or multi file
+                    // Force the encryption toggle ON and show password fields so the UI matches state
+                    if (!encToggle.checked) {
+                        encToggle.checked = true;
+                        syncPassVisibility();
+                    }
                     const passWrap = document.getElementById('decode-pass-wrap');
                     passWrap.classList.remove('hidden');
                     const password = document.getElementById('decode-pass').value;
@@ -487,7 +645,6 @@
                         return;
                     }
 
-                    const len = u8.length;
                     const offset = u8[len - 8] | (u8[len - 7] << 8) | (u8[len - 6] << 16) | ((u8[len - 5] << 24) >>> 0);
                     const payload = u8.slice(offset, len - 8);
                     // payload = MAGIC(4) | salt(16) | iv(12) | ciphertext
@@ -507,42 +664,56 @@
                         return;
                     }
 
-                    const nameLen = plaintext[0] | (plaintext[1] << 8);
-                    const nameBytes = plaintext.slice(2, 2 + nameLen);
-                    const fileName = new TextDecoder().decode(nameBytes);
-                    const fileBytes = plaintext.slice(2 + nameLen);
-
-                    downloadBlob(fileBytes, fileName);
-                    btn.innerText = "SUCCESS!";
+                    // plaintext:
+                    //   starts with PK\x03\x04 -> ZIP archive -> download as extracted.zip
+                    //   otherwise              -> [nameLen u16][name][bytes] -> restore original file
+                    if (plaintext.length >= 4
+                        && plaintext[0] === 0x50 && plaintext[1] === 0x4B
+                        && plaintext[2] === 0x03 && plaintext[3] === 0x04) {
+                        downloadBlob(plaintext, 'extracted.zip', 'application/zip');
+                        btn.innerText = "EXTRACTED ZIP!";
+                    } else {
+                        const nameLen = plaintext[0] | (plaintext[1] << 8);
+                        const fileName = new TextDecoder().decode(plaintext.slice(2, 2 + nameLen));
+                        const fileBytes = plaintext.slice(2 + nameLen);
+                        downloadBlob(fileBytes, fileName);
+                        btn.innerText = "SUCCESS!";
+                    }
                 } else {
-                    // Legacy MARKER path
-                    const binaryString = new TextDecoder().decode(u8);
-                    const parts = binaryString.split(MARKER);
+                    // Non-encrypted MARKER format (single-file or multi-file)
+                    const markerBytes = new TextEncoder().encode(MARKER);
+                    const findMarker = (from) => {
+                        for (let i = from; i <= u8.length - markerBytes.length; i++) {
+                            let match = true;
+                            for (let j = 0; j < markerBytes.length; j++) {
+                                if (u8[i + j] !== markerBytes[j]) { match = false; break; }
+                            }
+                            if (match) return i;
+                        }
+                        return -1;
+                    };
 
-                    if (parts.length < 3) {
+                    const idx1 = findMarker(0);
+                    const idx2 = idx1 === -1 ? -1 : findMarker(idx1 + markerBytes.length);
+                    if (idx1 === -1 || idx2 === -1) {
                         btn.innerText = "ERROR: NO DATA";
                         setTimeout(() => btn.innerText = "Extract Hidden File", 2000);
                         alert("No hidden file found in this image.");
                         return;
                     }
 
-                    const fileName = parts[1];
-                    const markerEncoded = new TextEncoder().encode(MARKER);
-                    let count = 0, secondIdx = -1;
-                    for (let i = 0; i < u8.length; i++) {
-                        let match = true;
-                        for (let j = 0; j < markerEncoded.length; j++) {
-                            if (u8[i + j] !== markerEncoded[j]) { match = false; break; }
-                        }
-                        if (match) {
-                            count++;
-                            if (count === 2) { secondIdx = i; break; }
-                        }
-                    }
+                    const headerStr = new TextDecoder().decode(u8.slice(idx1 + markerBytes.length, idx2));
+                    const payload = u8.slice(idx2 + markerBytes.length);
 
-                    const payload = u8.slice(secondIdx + markerEncoded.length);
-                    downloadBlob(payload, fileName);
-                    btn.innerText = "SUCCESS!";
+                    if (headerStr === "ZIP") {
+                        // Multi-file non-encrypted: payload is a ZIP archive
+                        downloadBlob(payload, 'extracted.zip', 'application/zip');
+                        btn.innerText = "EXTRACTED ZIP!";
+                    } else {
+                        // Legacy: header is the filename, payload is the single file
+                        downloadBlob(payload, headerStr);
+                        btn.innerText = "SUCCESS!";
+                    }
                 }
             } catch (err) {
                 console.error(err);
