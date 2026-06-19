@@ -1,0 +1,27 @@
+{
+    "name": "PixelVault — Hide Files in Photos",
+    "short_name": "PixelVault",
+    "description": "Hide any file inside a photo, with optional AES-256-GCM encryption. 100% client-side, zero uploads.",
+    "id": "/",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait",
+    "background_color": "#050505",
+    "theme_color": "#ff003c",
+    "categories": [
+        "productivity",
+        "security",
+        "utilities"
+    ],
+    "lang": "en",
+    "dir": "ltr",
+    "icons": [
+        {
+            "src": "icon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

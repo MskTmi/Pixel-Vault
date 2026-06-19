@@ -3,10 +3,67 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PixelVault</title>
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <!-- Primary SEO -->
+    <title>PixelVault — Hide Any File Inside a Photo (AES-256 Encrypted)</title>
+    <meta name="description"
+        content="PixelVault lets you hide any file inside a photo, right in your browser. Optional AES-256-GCM encryption. 100% client-side — your files never leave your device.">
+    <meta name="keywords"
+        content="steganography, hide file in image, image steganography, AES-256 encryption, file hider, photo vault, pixel vault, client-side encryption, privacy tool">
+    <meta name="author" content="PixelVault">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#ff003c">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://stego.msktmi.com/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="PixelVault — Hide Any File Inside a Photo">
+    <meta property="og:description"
+        content="Hide any file inside a photo with optional AES-256-GCM encryption. 100% client-side, zero uploads.">
+    <meta property="og:site_name" content="PixelVault">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://stego.msktmi.com/">
+    <meta property="og:image" content="https://stego.msktmi.com/icon.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PixelVault — Hide Any File Inside a Photo">
+    <meta name="twitter:description"
+        content="Hide any file inside a photo with optional AES-256-GCM encryption. 100% client-side, zero uploads.">
+    <meta name="twitter:image" content="https://stego.msktmi.com/icon.png">
+
+    <!-- Icons & PWA -->
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PixelVault">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "PixelVault",
+      "description": "Hide any file inside a photo with optional AES-256-GCM encryption. 100% client-side.",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript. Requires Web Crypto API.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "featureList": [
+        "Hide any file inside a photo",
+        "Optional AES-256-GCM encryption",
+        "PBKDF2 key derivation (150k iterations)",
+        "100% client-side — no uploads",
+        "Backward compatible with legacy format"
+      ]
+    }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -464,6 +521,16 @@
                 btn.innerText = "ERROR";
             }
             setTimeout(() => btn.innerText = "Extract Hidden File", 2000);
+        }
+    </script>
+
+    <!-- PWA service worker registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .catch((err) => console.warn('SW registration failed:', err));
+            });
         }
     </script>
 </body>
