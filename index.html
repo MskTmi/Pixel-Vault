@@ -39,7 +39,7 @@
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="PixelVault">
     <meta name="mobile-web-app-capable" content="yes">
 
@@ -103,25 +103,6 @@
         /* MOBILE FIX - Force visibility for all text */
         @media (max-width: 768px) {
 
-            /* File input text */
-            input[type="file"] {
-                color: #ffffff !important;
-                background-color: #000000 !important;
-                border: 1px solid #333;
-            }
-
-            /* File input placeholder text */
-            input[type="file"]::file-selector-button {
-                color: #ffffff;
-                background: #ff003c;
-                border: none;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-weight: bold;
-                margin-right: 10px;
-                cursor: pointer;
-            }
-
             /* Password input */
             input[type="password"] {
                 color: #ffffff !important;
@@ -137,7 +118,8 @@
             .upload-status,
             .file-status,
             #img-status,
-            #file-status {
+            #file-status,
+            #decode-status {
                 color: #00f0ff !important;
                 background-color: #111;
                 padding: 8px 12px;
@@ -147,12 +129,6 @@
                 word-break: break-all;
                 border-left: 3px solid #111111;
                 display: block !important;
-            }
-
-            /* The dashed border area in decode panel */
-            .border-dashed {
-                border-color: #111111 !important;
-                background-color: #111;
             }
 
             /* All text inside decode panel */
@@ -227,17 +203,29 @@
         <div id="encode-panel" class="space-y-6">
             <div>
                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">1. Pick a Photo</label>
-                <input type="file" id="img-input" accept="image/*"
-                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-xs file:hidden cursor-pointer hover:border-gray-600">
+                <label
+                    class="flex items-stretch w-full bg-black border border-gray-800 rounded-lg cursor-pointer hover:border-gray-600 overflow-hidden">
+                    <span
+                        class="flex items-center shrink-0 bg-[#ff003c] text-white font-bold text-xs uppercase tracking-wider px-4 py-3">Choose</span>
+                    <span class="flex items-center flex-1 px-3 text-xs text-gray-500 truncate min-w-0" id="img-name">No
+                        file chosen</span>
+                    <input type="file" id="img-input" accept="image/*" class="sr-only">
+                </label>
                 <div id="img-status" class="upload-status text-xs text-[#00f0ff] mt-2 font-mono hidden"></div>
             </div>
             <div>
                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">2. File to Hide</label>
-                <input type="file" id="file-input"
-                    class="w-full bg-black border border-gray-800 p-3 rounded-lg text-xs file:hidden cursor-pointer hover:border-gray-600">
+                <label
+                    class="flex items-stretch w-full bg-black border border-gray-800 rounded-lg cursor-pointer hover:border-gray-600 overflow-hidden">
+                    <span
+                        class="flex items-center shrink-0 bg-[#ff003c] text-white font-bold text-xs uppercase tracking-wider px-4 py-3">Choose</span>
+                    <span class="flex items-center flex-1 px-3 text-xs text-gray-500 truncate min-w-0" id="file-name">No
+                        file chosen</span>
+                    <input type="file" id="file-input" class="sr-only">
+                </label>
                 <div id="file-status" class="upload-status text-xs text-[#00f0ff] mt-2 font-mono hidden"></div>
             </div>
-            <div id="encode-pass-wrap">
+            <div id="encode-pass-wrap" class="max-md:!mt-3">
                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">3. Password</label>
                 <input type="password" id="encode-pass" placeholder="••••••••"
                     class="w-full bg-black border border-gray-800 p-3 rounded-lg text-sm cursor-pointer hover:border-gray-600">
@@ -249,14 +237,19 @@
         </div>
 
         <div id="decode-panel" class="hidden space-y-6">
-            <div class="text-center">
-                <label class="text-xs font-bold text-gray-400 uppercase mb-4 block">Upload the Encoded Photo</label>
-                <div class="border-2 border-dashed border-gray-800 p-10 rounded-2xl">
-                    <input type="file" id="decode-input" accept="image/*" class="text-xs text-gray-500">
-                </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Upload the Encoded Photo</label>
+                <label
+                    class="flex items-stretch w-full bg-black border border-gray-800 rounded-lg cursor-pointer hover:border-gray-600 overflow-hidden">
+                    <span
+                        class="flex items-center shrink-0 bg-[#00f0ff] text-black font-bold text-xs uppercase tracking-wider px-4 py-3">Choose</span>
+                    <span class="flex items-center flex-1 px-3 text-xs text-gray-500 truncate min-w-0"
+                        id="decode-name">No file chosen</span>
+                    <input type="file" id="decode-input" accept="image/*" class="sr-only">
+                </label>
                 <div id="decode-status" class="upload-status text-xs text-[#00f0ff] mt-2 font-mono hidden"></div>
             </div>
-            <div id="decode-pass-wrap">
+            <div id="decode-pass-wrap" class="max-md:!mt-3">
                 <label class="text-xs font-bold text-gray-400 uppercase mb-2 block">Password</label>
                 <input type="password" id="decode-pass" placeholder="••••••••"
                     class="w-full bg-black border border-gray-800 p-3 rounded-lg text-sm cursor-pointer hover:border-gray-600">
@@ -329,30 +322,51 @@
         // File name display for mobile
         document.getElementById('img-input').addEventListener('change', function (e) {
             const statusDiv = document.getElementById('img-status');
+            const nameSpan = document.getElementById('img-name');
             if (e.target.files[0]) {
+                nameSpan.textContent = e.target.files[0].name;
+                nameSpan.classList.remove('text-gray-500');
+                nameSpan.classList.add('text-white');
                 statusDiv.innerHTML = '✅ <span class="text-white">' + e.target.files[0].name + '</span>';
                 statusDiv.classList.remove('hidden');
             } else {
+                nameSpan.textContent = 'No file chosen';
+                nameSpan.classList.add('text-gray-500');
+                nameSpan.classList.remove('text-white');
                 statusDiv.classList.add('hidden');
             }
         });
 
         document.getElementById('file-input').addEventListener('change', function (e) {
             const statusDiv = document.getElementById('file-status');
+            const nameSpan = document.getElementById('file-name');
             if (e.target.files[0]) {
+                nameSpan.textContent = e.target.files[0].name;
+                nameSpan.classList.remove('text-gray-500');
+                nameSpan.classList.add('text-white');
                 statusDiv.innerHTML = '📦 <span class="text-white">' + e.target.files[0].name + '</span>';
                 statusDiv.classList.remove('hidden');
             } else {
+                nameSpan.textContent = 'No file chosen';
+                nameSpan.classList.add('text-gray-500');
+                nameSpan.classList.remove('text-white');
                 statusDiv.classList.add('hidden');
             }
         });
 
         document.getElementById('decode-input').addEventListener('change', function (e) {
             const statusDiv = document.getElementById('decode-status');
+            const nameSpan = document.getElementById('decode-name');
             if (e.target.files[0]) {
+                nameSpan.textContent = e.target.files[0].name;
+                nameSpan.classList.remove('text-gray-500');
+                nameSpan.classList.add('text-white');
                 statusDiv.innerHTML = '🔓 <span class="text-white">' + e.target.files[0].name + '</span>';
                 statusDiv.classList.remove('hidden');
             } else {
+                nameSpan.textContent = 'No file chosen';
+                nameSpan.classList.add('text-gray-500');
+                nameSpan.classList.remove('text-white');
                 statusDiv.classList.add('hidden');
             }
         });
